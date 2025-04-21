@@ -5,6 +5,8 @@ from langchain_chroma import Chroma
 
 # https://python.langchain.com/docs/how_to/#document-loaders
 file_path = "data"
+chroma_path = "chroma_langchain_db"
+
 def load_documents():
     document_loader = PyPDFDirectoryLoader(file_path)
     return document_loader.load()
@@ -26,13 +28,33 @@ text = text_splitter(documents)
 
 
 # https://python.langchain.com/docs/integrations/vectorstores/chroma/
-def add_to_chroma(embeddings):
+def add_to_chroma(embeddings, chunks: list[documents]):
     vector_store = Chroma(
         # collection_name="example_collection",
         embedding_function=embeddings,
-        persist_directory="./chroma_langchain_db",  # Where to save data locally, remove if not necessary
+        persist_directory=chroma_path,  # Where to save data locally, remove if not necessary
     )
-    return vector_store
+    chunks_with_ids = calculate_chunk_ids(chunks)
+
+    # Add or Update the documents.
+    existing_items = vector_store.get(include=[])  # IDs are always included by default
+    existing_ids = set(existing_items["ids"])
+    print(f"Number of existing documents in DB: {len(existing_ids)}")
+
+    # Only add documents that don't exist in the DB.
+    new_chunks = []
+    for chunk in chunks_with_ids:
+        if chunk.metadata["id"] not in existing_ids:
+            new_chunks.append(chunk)
+
+    if len(new_chunks):
+        print(f"Adding new documents: {len(new_chunks)}")
+        new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
+        vector_store.add_documents(new_chunks, ids=new_chunk_ids)
+        vector_store.persist()
+    else:
+        print("No new documents to add")
+
 
 def calculate_chunk_ids(chunks):
     last_page_id = None
