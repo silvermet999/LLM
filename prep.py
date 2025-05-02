@@ -1,6 +1,7 @@
 from langchain.document_loaders.pdf import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
+from embedding import get_embedding_function
 
 
 # https://python.langchain.com/docs/how_to/#document-loaders
@@ -24,7 +25,7 @@ def text_splitter(document : list[documents]):
     )
     return text_splitter.split_documents(document)
 
-text = text_splitter(documents)
+chunks = text_splitter(documents)
 
 
 # https://python.langchain.com/docs/integrations/vectorstores/chroma/
@@ -51,7 +52,6 @@ def add_to_chroma(embeddings, chunks: list[documents]):
         print(f"Adding new documents: {len(new_chunks)}")
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
         vector_store.add_documents(new_chunks, ids=new_chunk_ids)
-        vector_store.persist()
     else:
         print("No new documents to add")
 
@@ -79,3 +79,6 @@ def calculate_chunk_ids(chunks):
         chunk.metadata["id"] = chunk_id
 
     return chunks
+
+embedding = get_embedding_function()
+add_to_chroma(embedding, chunks)
