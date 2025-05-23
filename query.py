@@ -1,4 +1,4 @@
-from langchain.vectorstores.chroma import Chroma
+from langchain_community.vectorstores.chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 
@@ -32,5 +32,5 @@ def query_rag(query_text: str):
     print(formatted_response)
     return response_text
 
-query_text = "How should the player record his move"
-query_rag(query_text)
+# query_text = "What is article 7 about?"
+# query_rag(query_text)
